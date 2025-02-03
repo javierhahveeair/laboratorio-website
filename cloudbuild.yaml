@@ -1,0 +1,42 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '--build-arg',
+      'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyAuHBYWBnJruDn_e3XhZH6anQZQB73KlIs',
+      '-t',
+      '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}',
+      '.'
+    ]
+
+  # Push the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run',
+      'deploy',
+      '${_SERVICE_NAME}',
+      '--image',
+      '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}',
+      '--region',
+      '${_REGION}',
+      '--platform',
+      'managed',
+      '--allow-unauthenticated',
+      '--port',
+      '8080'
+    ]
+
+substitutions:
+  _REGION: ue
+  _REPOSITORY: laboratorio
+  _IMAGE: laboratorio-website
+  _SERVICE_NAME: laboratorio-website
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}'
